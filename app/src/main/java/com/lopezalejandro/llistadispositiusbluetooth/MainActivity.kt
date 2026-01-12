@@ -1,7 +1,8 @@
 package com.lopezalejandro.llistadispositiusbluetooth
 
+import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothDevice
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.widget.Button
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AlertDialog
@@ -18,6 +19,7 @@ class MainActivity : AppCompatActivity() {
 
     private var devices : ArrayList<Device> = ArrayList<Device>()
     private var customAdapter = CustomAdapter(devices) { position -> showDetails(position) }
+    private var bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -52,5 +54,18 @@ class MainActivity : AppCompatActivity() {
             .setMessage("Mac Address: " + devices.get(position).getMacAddress())
         val alert: AlertDialog = builder.create()
         alert.show()
+    }
+
+    private fun updatePairedDevices() {
+        devices.clear()
+
+        for( elem in bluetoothAdapter.bondedDevices.filter { device ->
+            device.type == BluetoothDevice.DEVICE_TYPE_LE ||
+                    device.type == BluetoothDevice.DEVICE_TYPE_DUAL ||
+                    device.type == BluetoothDevice.DEVICE_TYPE_UNKNOWN
+        } ) {
+            // afegim element al dataset
+            devices.add( Device(elem.name, elem.address) )
+        }
     }
 }
