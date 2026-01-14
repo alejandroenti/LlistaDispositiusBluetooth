@@ -1,18 +1,27 @@
 package com.lopezalejandro.llistadispositiusbluetooth
 
+import android.Manifest
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.widget.Button
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
+import androidx.annotation.RequiresPermission
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 
 class MainActivity : AppCompatActivity() {
+
+    private val REQUEST_CODE_BLUETOOTH = 100 // es pot posar un nombre aleatori no emprat en cap altre lloc
 
     private lateinit var recycler : RecyclerView
     private lateinit var btnAddDevice : Button
@@ -56,16 +65,56 @@ class MainActivity : AppCompatActivity() {
         alert.show()
     }
 
+    @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
     private fun updatePairedDevices() {
         devices.clear()
 
-        for( elem in bluetoothAdapter.bondedDevices.filter { device ->
-            device.type == BluetoothDevice.DEVICE_TYPE_LE ||
-                    device.type == BluetoothDevice.DEVICE_TYPE_DUAL ||
-                    device.type == BluetoothDevice.DEVICE_TYPE_UNKNOWN
-        } ) {
+        for(elem in bluetoothAdapter.bondedDevices) {
             // afegim element al dataset
             devices.add( Device(elem.name, elem.address) )
+        }
+    }
+
+    private fun requestBluetoothPermissionAndUpdate() {
+        val permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            // Android 12+ requereix BLUETOOTH_CONNECT
+            Manifest.permission.BLUETOOTH_CONNECT
+        } else {
+            // Versions anteriors
+            Manifest.permission.BLUETOOTH
+        }
+
+        if (ContextCompat.checkSelfPermission(this, permission) !=
+            PackageManager.PERMISSION_GRANTED) {
+
+            // Demanar el permís
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(permission),
+                REQUEST_CODE_BLUETOOTH
+            )
+        } else {
+            // Permís ja concedit - llegir dispositius
+            updatePairedDevices()
+        }
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+
+        if (requestCode == REQUEST_CODE_BLUETOOTH) {
+            if (grantResults.isNotEmpty() && grantResults[0] ==
+                PackageManager.PERMISSION_GRANTED) {
+                // Permís concedit - llegir dispositius
+                updatePairedDevices()
+            } else {
+                // Permís denegat
+                Toast.makeText(this, "Permís necessari per a llegir Bluetooth", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 }
