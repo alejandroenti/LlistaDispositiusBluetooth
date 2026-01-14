@@ -2,7 +2,6 @@ package com.lopezalejandro.llistadispositiusbluetooth
 
 import android.Manifest
 import android.bluetooth.BluetoothAdapter
-import android.bluetooth.BluetoothDevice
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -24,7 +23,7 @@ class MainActivity : AppCompatActivity() {
     private val REQUEST_CODE_BLUETOOTH = 100 // es pot posar un nombre aleatori no emprat en cap altre lloc
 
     private lateinit var recycler : RecyclerView
-    private lateinit var btnAddDevice : Button
+    private lateinit var btnRefreshDevices : Button
 
     private var devices : ArrayList<Device> = ArrayList<Device>()
     private var customAdapter = CustomAdapter(devices) { position -> showDetails(position) }
@@ -41,12 +40,11 @@ class MainActivity : AppCompatActivity() {
         }
 
         recycler = findViewById<RecyclerView>(R.id.bluetoothDeviceList)
-        btnAddDevice = findViewById<Button>(R.id.button)
+        btnRefreshDevices = findViewById<Button>(R.id.button)
 
 
-        btnAddDevice.setOnClickListener {
-            devices.add(Device())
-            customAdapter.notifyItemInserted(devices.size - 1)
+        btnRefreshDevices.setOnClickListener {
+            requestBluetoothPermissionAndUpdate()
         }
 
         recycler.layoutManager = LinearLayoutManager(this)
@@ -65,13 +63,13 @@ class MainActivity : AppCompatActivity() {
         alert.show()
     }
 
-    @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
     private fun updatePairedDevices() {
         devices.clear()
 
-        for(elem in bluetoothAdapter.bondedDevices) {
+        for (elem in bluetoothAdapter.bondedDevices) {
             // afegim element al dataset
-            devices.add( Device(elem.name, elem.address) )
+            devices.add( Device(elem.name, elem.address))
+            customAdapter.notifyItemInserted(devices.size - 1)
         }
     }
 
