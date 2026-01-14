@@ -112,7 +112,7 @@ class MainActivity : AppCompatActivity() {
                 updatePairedDevices()
             } else {
                 // Permís denegat
-                Toast.makeText(this, "Permís necessari per a llegir Bluetooth", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Permís necessari per a llegir dispositius Bluetooth", Toast.LENGTH_SHORT).show()
             }
         }
     }
