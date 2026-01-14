@@ -64,6 +64,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updatePairedDevices() {
+        customAdapter.notifyItemRangeRemoved(0, devices.size)
         devices.clear()
 
         for (elem in bluetoothAdapter.bondedDevices) {
