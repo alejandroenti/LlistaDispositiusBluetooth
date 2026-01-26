@@ -1,12 +1,13 @@
 package com.lopezalejandro.llistadispositiusbluetooth
 
+import android.bluetooth.BluetoothDevice
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 
-class CustomAdapter(private val dataSet: ArrayList<Device>, private val onItemClick: (Int) -> Unit) :
+class CustomAdapter(private val dataSet: ArrayList<BluetoothDevice>, private val onItemClick: (BluetoothDevice) -> Unit) :
     RecyclerView.Adapter<CustomAdapter.ViewHolder>() {
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
 
@@ -28,11 +29,11 @@ class CustomAdapter(private val dataSet: ArrayList<Device>, private val onItemCl
     }
 
     override fun onBindViewHolder(viewHolder: ViewHolder, position: Int) {
-        viewHolder.textName.text = dataSet[position].getName()
-        viewHolder.textMacAddress.text = dataSet[position].getMacAddress()
+        viewHolder.textName.text = dataSet[position].name
+        viewHolder.textMacAddress.text = dataSet[position].address
 
         viewHolder.itemView.setOnClickListener {
-            onItemClick(position)
+            onItemClick(dataSet[position])
         }
     }
 
