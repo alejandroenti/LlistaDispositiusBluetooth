@@ -2,6 +2,8 @@ package com.lopezalejandro.llistadispositiusbluetooth
 
 import android.Manifest
 import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothDevice
+import android.bluetooth.BluetoothGatt
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -17,13 +19,15 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import java.io.File
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), BLEconnDialog.BLEConnectionCallback {
 
     private val REQUEST_CODE_BLUETOOTH = 100 // es pot posar un nombre aleatori no emprat en cap altre lloc
 
     private lateinit var recycler : RecyclerView
     private lateinit var btnRefreshDevices : Button
+    private lateinit var bleDialog : BLEconnDialog
 
     private var devices : ArrayList<Device> = ArrayList<Device>()
     private var customAdapter = CustomAdapter(devices) { position -> showDetails(position) }
@@ -67,9 +71,16 @@ class MainActivity : AppCompatActivity() {
         devices.clear()
 
         for (elem in bluetoothAdapter.bondedDevices) {
-            // afegim element al dataset
-            devices.add( Device(elem.name, elem.address))
-            customAdapter.notifyItemInserted(devices.size - 1)
+            for( elem in bluetoothAdapter.bondedDevices.filter { device ->
+                // Filtrar per dispositius BLE
+                device.type == BluetoothDevice.DEVICE_TYPE_LE ||
+                        device.type == BluetoothDevice.DEVICE_TYPE_DUAL ||
+                        device.type == BluetoothDevice.DEVICE_TYPE_UNKNOWN
+            } ) {
+                // afegim element al dataset
+                devices.add(Device(elem.name, elem.address))
+                customAdapter.notifyItemInserted(devices.size - 1)
+            }
         }
     }
 
@@ -114,5 +125,53 @@ class MainActivity : AppCompatActivity() {
                 Toast.makeText(this, "Permís necessari per a llegir Bluetooth", Toast.LENGTH_SHORT).show()
             }
         }
+    }
+
+    // DIALOG : cridar aquesta funció per mostrar-lo
+    ////////////////////////////////////////////////
+    private fun showBLEDialog(device: BluetoothDevice) {
+        bleDialog = BLEconnDialog(this, device, this)
+        bleDialog?.apply {
+            setCancelable(false)
+            setOnCancelListener {
+                onConnectionCancelled()
+            }
+            show()
+        }
+    }
+
+    // DIALOG CALLBACKS
+    ///////////////////////////////
+    override fun onConnectionSuccess(gatt: BluetoothGatt) {
+        runOnUiThread {
+            Toast.makeText(this, "Connectat amb èxit!", Toast.LENGTH_SHORT).show()
+            // Aquí pots fer operacions amb el gatt connectat
+            // Per exemple: llegir/escribre característiques
+        }
+    }
+
+    override fun onConnectionFailed(error: String) {
+        runOnUiThread {
+            Toast.makeText(this, "Error de connexió: $error", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    override fun onConnectionCancelled() {
+        runOnUiThread {
+            Toast.makeText(this, "Connexió cancel·lada", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    override fun onReceivedImage(file: File) {
+        runOnUiThread {
+            val filename = file.name
+            Toast.makeText(this, "Imatge rebuda: $filename", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    // Aquesta callback és de l'Activity
+    override fun onDestroy() {
+        super.onDestroy()
+        bleDialog?.dismiss()
     }
 }
