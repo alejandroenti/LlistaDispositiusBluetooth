@@ -68,6 +68,7 @@ class MainActivity : AppCompatActivity(), BLEconnDialog.BLEConnectionCallback {
     }
 
     private fun updatePairedDevices() {
+        customAdapter.notifyItemRangeRemoved(0, devices.size)
         devices.clear()
 
         for (elem in bluetoothAdapter.bondedDevices) {
@@ -122,7 +123,7 @@ class MainActivity : AppCompatActivity(), BLEconnDialog.BLEConnectionCallback {
                 updatePairedDevices()
             } else {
                 // Permís denegat
-                Toast.makeText(this, "Permís necessari per a llegir Bluetooth", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Permís necessari per a llegir dispositius Bluetooth", Toast.LENGTH_SHORT).show()
             }
         }
     }
