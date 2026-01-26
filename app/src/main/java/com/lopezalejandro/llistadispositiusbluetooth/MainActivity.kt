@@ -29,8 +29,8 @@ class MainActivity : AppCompatActivity(), BLEconnDialog.BLEConnectionCallback {
     private lateinit var btnRefreshDevices : Button
     private lateinit var bleDialog : BLEconnDialog
 
-    private var devices : ArrayList<Device> = ArrayList<Device>()
-    private var customAdapter = CustomAdapter(devices) { position -> showDetails(position) }
+    private var devices : ArrayList<BluetoothDevice> = ArrayList<BluetoothDevice>()
+    private var customAdapter = CustomAdapter(devices) { position -> showBLEDialog(position) }
     private var bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -55,6 +55,7 @@ class MainActivity : AppCompatActivity(), BLEconnDialog.BLEConnectionCallback {
         recycler.adapter = customAdapter
     }
 
+    /*
     private fun showDetails(position : Int) {
         val builder: AlertDialog.Builder = AlertDialog.Builder(this)
         builder
@@ -66,22 +67,21 @@ class MainActivity : AppCompatActivity(), BLEconnDialog.BLEConnectionCallback {
         val alert: AlertDialog = builder.create()
         alert.show()
     }
+     */
 
     private fun updatePairedDevices() {
         customAdapter.notifyItemRangeRemoved(0, devices.size)
         devices.clear()
 
-        for (elem in bluetoothAdapter.bondedDevices) {
-            for( elem in bluetoothAdapter.bondedDevices.filter { device ->
-                // Filtrar per dispositius BLE
-                device.type == BluetoothDevice.DEVICE_TYPE_LE ||
-                        device.type == BluetoothDevice.DEVICE_TYPE_DUAL ||
-                        device.type == BluetoothDevice.DEVICE_TYPE_UNKNOWN
-            } ) {
-                // afegim element al dataset
-                devices.add(Device(elem.name, elem.address))
-                customAdapter.notifyItemInserted(devices.size - 1)
-            }
+        for( elem in bluetoothAdapter.bondedDevices.filter { device ->
+            // Filtrar per dispositius BLE
+            device.type == BluetoothDevice.DEVICE_TYPE_LE ||
+                    device.type == BluetoothDevice.DEVICE_TYPE_DUAL ||
+                    device.type == BluetoothDevice.DEVICE_TYPE_UNKNOWN
+        } ) {
+            // afegim element al dataset
+            devices.add(elem)
+            customAdapter.notifyItemInserted(devices.size - 1)
         }
     }
 
